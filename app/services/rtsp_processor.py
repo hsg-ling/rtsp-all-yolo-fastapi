@@ -28,6 +28,7 @@ class RTSPProcessAndPushService:
             height: int = 576,
             yolo_model: Optional[YOLO] = None,
             target_class: Optional[int] = None,
+            is_use_yolo: bool = True,
 
     ):
         self.input_rtsp = input_rtsp
@@ -39,6 +40,8 @@ class RTSPProcessAndPushService:
         self.yolo_model = yolo_model.to(self.device)
         self.target_class = target_class
         logger.info(f"camera fps: {self.fps}")
+        logger.info(f"device: {self.device}")
+        self.is_use_yolo = is_use_yolo
 
         self.is_running = False
         self.cap: Optional[cv2.VideoCapture] = None
@@ -165,14 +168,12 @@ class RTSPProcessAndPushService:
             except queue.Empty:
                 continue
 
-            # 假YOLO处理 + 推流（原有逻辑）
-            # current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            # cv2.putText(frame, current_time, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-            # # 模拟处理帧耗时
-            # time.sleep(0.05)
-            # frame = cv2.resize(frame, (self.width, self.height))
+            if self.is_use_yolo:
+                frame = self.detect_human(frame)
+            else:
+                frame = cv2.resize(frame, (self.width, self.height))
 
-            frame = self.detect_human(frame)
+
 
             try:
 
@@ -218,7 +219,10 @@ yolo_model = YOLO("yolov8n.pt")
 # 只检测人体，YOLO中person的类别ID是0
 TARGET_CLASS = 0
 
-_processor_service = RTSPProcessAndPushService(RTSP1_URL, RTSP2_URL, yolo_model=yolo_model, target_class=TARGET_CLASS)
+# 是否启用YOLO
+IS_USE_YOLO = True
+
+_processor_service = RTSPProcessAndPushService(RTSP1_URL, RTSP2_URL, yolo_model=yolo_model, target_class=TARGET_CLASS, is_use_yolo=IS_USE_YOLO)
 
 
 def get_processor_service() -> RTSPProcessAndPushService:
