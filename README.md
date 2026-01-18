@@ -26,6 +26,9 @@
        source: rtsp://localhost:8555/processed_stream  # 这是后端处理之后推送至mediamtx的路径，这里的8555端口根据自己实际情况调整，供mediamtx读取，也就是我rtsp_process.py中的RTSP2_URL
        sourceProtocol: tcp # 解决花屏的关键
        sourceOnDemand: yes
+
+   # 内网穿透 解决 deadline exceeded while waiting connection 问题
+   webrtcICEServers2: [url: stun:stun.l.google.com:19302]   # 在mediamtx配置文件 409 行附近配置ICE服务器
   
 3.  确保rtsp和WebRTC服务开启
 4.  根据摄像头实际rtsp流地址设置``rtsp_process.py``的RTSP1_URL
